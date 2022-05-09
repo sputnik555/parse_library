@@ -1,9 +1,11 @@
 import requests
 from pathlib import Path
 
+
 def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
+
 
 if __name__ == '__main__':
     Path('book').mkdir(exist_ok=True)
@@ -12,7 +14,7 @@ if __name__ == '__main__':
         response = requests.get(url)
         try:
             check_for_redirect(response)
-        except:
+        except requests.HTTPError:
             continue
         response.raise_for_status()
         filename = 'book/{}.txt'.format(book_id)
