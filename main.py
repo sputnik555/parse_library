@@ -1,3 +1,4 @@
+import argparse
 import requests
 import os
 import urllib.parse
@@ -57,7 +58,13 @@ def parse_book_page(soup):
 
 
 if __name__ == '__main__':
-    for book_id in range(1, 11):
+    parser = argparse.ArgumentParser(
+        description='Скрипт для парсинга онлайн библиотеки tululu.org'
+    )
+    parser.add_argument('--start_id', default=1, help='Стартовый id книги', type=int)
+    parser.add_argument('--end_id', default=10, help='Конечный id книги', type=int)
+    args = parser.parse_args()
+    for book_id in range(args.start_id, args.end_id + 1):
         url = "https://tululu.org/b{}/".format(book_id)
         response = requests.get(url)
         try:
@@ -72,6 +79,4 @@ if __name__ == '__main__':
         download_txt(url, f'{book_id}.{book["title"]}')
         download_image(book['image_url'], book["image_filename"])
 
-        print('Заголовок: {}'.format(book['title']))
-        print(book['genres'])
-        print()
+        print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
