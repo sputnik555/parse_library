@@ -1,5 +1,6 @@
 import requests
 import os
+import urllib.parse
 from pathlib import Path
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
@@ -28,6 +29,16 @@ def download_txt(url, filename, folder='books/'):
     return path
 
 
+def download_image(url, filename, folder='images/'):
+    Path(folder).mkdir(exist_ok=True)
+    response = requests.get(url)
+    response.raise_for_status()
+    path = os.path.join(folder, sanitize_filename(f'{filename}'))
+    with open(path, 'wb') as file:
+        file.write(response.content)
+    return path
+
+
 if __name__ == '__main__':
     for book_id in range(1, 11):
         url = "https://tululu.org/b{}/".format(book_id)
@@ -43,3 +54,10 @@ if __name__ == '__main__':
         book_author = tululu_title[1].strip()
         url = "https://tululu.org/txt.php?id={}".format(book_id)
         download_txt(url, f'{book_id}.{book_title}')
+
+        image_src = soup.find('div', class_='bookimage').find('img')['src']
+        image_url = urllib.parse.urljoin('http://tululu.org/', image_src)
+        image_filename = os.path.basename(image_url)
+        download_image(image_url, image_filename)
+
+        print(f'Заголовок: {book_title}\n{image_url}\n')
