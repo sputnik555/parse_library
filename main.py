@@ -60,4 +60,8 @@ if __name__ == '__main__':
         image_filename = os.path.basename(image_url)
         download_image(image_url, image_filename)
 
-        print(f'Заголовок: {book_title}\n{image_url}\n')
+        print(f'Заголовок: {book_title}\n{image_url}')
+        texts = soup.find_all('div', class_='texts')
+        for text in texts:
+            print(text.find('span').text)
+        print()
