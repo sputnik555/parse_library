@@ -39,6 +39,23 @@ def download_image(url, filename, folder='images/'):
     return path
 
 
+def parse_book_page(soup):
+    book = {}
+    tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
+    book['title'] = tululu_title[0].strip()
+    book['author'] = tululu_title[1].strip()
+    image_src = soup.find('div', class_='bookimage').find('img')['src']
+    book['image_url'] = urllib.parse.urljoin('http://tululu.org/', image_src)
+    book['image_filename'] = os.path.basename(book['image_url'])
+    book['comments'] = [
+        comment.find('span').text for comment in soup.find_all('div', class_='texts')
+    ]
+    book['genres'] = [
+        genre.text for genre in soup.find('span', class_='d_book').find_all('a')
+    ]
+    return book
+
+
 if __name__ == '__main__':
     for book_id in range(1, 11):
         url = "https://tululu.org/b{}/".format(book_id)
@@ -49,23 +66,12 @@ if __name__ == '__main__':
             continue
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
-        book_title = tululu_title[0].strip()
-        book_author = tululu_title[1].strip()
+        book = parse_book_page(soup)
+
         url = "https://tululu.org/txt.php?id={}".format(book_id)
-        download_txt(url, f'{book_id}.{book_title}')
+        download_txt(url, f'{book_id}.{book["title"]}')
+        download_image(book['image_url'], book["image_filename"])
 
-        image_src = soup.find('div', class_='bookimage').find('img')['src']
-        image_url = urllib.parse.urljoin('http://tululu.org/', image_src)
-        image_filename = os.path.basename(image_url)
-        download_image(image_url, image_filename)
-
-        print(f'Заголовок: {book_title}\n{image_url}')
-        texts = soup.find_all('div', class_='texts')
-        for text in texts:
-            print(text.find('span').text)
-
-        genres = [
-            genre.text for genre in soup.find('span', class_='d_book').find_all('a')
-        ]
-        print(genres, '\n')
+        print('Заголовок: {}'.format(book['title']))
+        print(book['genres'])
+        print()
