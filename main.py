@@ -12,29 +12,11 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(url, filename, folder='books/'):
-    """Функция для скачивания текстовых файлов.
-    Args:
-        url (str): Cсылка на текст, который хочется скачать.
-        filename (str): Имя файла, с которым сохранять.
-        folder (str): Папка, куда сохранять.
-    Returns:
-        str: Путь до файла, куда сохранён текст.
-    """
+def download_file(url, filename, folder='books/'):
     Path(folder).mkdir(exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
-    path = os.path.join(folder, sanitize_filename(f'{filename}.txt'))
-    with open(path, 'wb') as file:
-        file.write(response.content)
-    return path
-
-
-def download_image(url, filename, folder='images/'):
-    Path(folder).mkdir(exist_ok=True)
-    response = requests.get(url)
-    response.raise_for_status()
-    path = os.path.join(folder, sanitize_filename(f'{filename}'))
+    path = os.path.join(folder, sanitize_filename(filename))
     with open(path, 'wb') as file:
         file.write(response.content)
     return path
@@ -76,7 +58,7 @@ if __name__ == '__main__':
         book = parse_book_page(soup)
 
         url = "https://tululu.org/txt.php?id={}".format(book_id)
-        download_txt(url, f'{book_id}.{book["title"]}')
-        download_image(book['image_url'], book["image_filename"])
+        download_file(url, f'{book_id}.{book["title"]}.txt', 'books/')
+        download_file(book['image_url'], book["image_filename"], 'images/')
 
         print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
