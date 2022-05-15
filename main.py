@@ -64,4 +64,8 @@ if __name__ == '__main__':
         texts = soup.find_all('div', class_='texts')
         for text in texts:
             print(text.find('span').text)
-        print()
+
+        genres = [
+            genre.text for genre in soup.find('span', class_='d_book').find_all('a')
+        ]
+        print(genres, '\n')
