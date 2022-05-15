@@ -50,10 +50,10 @@ if __name__ == '__main__':
         url = "https://tululu.org/b{}/".format(book_id)
         response = requests.get(url)
         try:
+            response.raise_for_status()
             check_for_redirect(response)
         except requests.HTTPError:
             continue
-        response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
         book = parse_book_page(soup)
 
