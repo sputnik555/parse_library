@@ -23,14 +23,13 @@ def download_file(url, filename, folder='books/'):
     return path
 
 
-def parse_book_page(soup):
+def parse_book_page(soup, url):
     book = {}
     tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
     book['title'] = tululu_title[0].strip()
     book['author'] = tululu_title[1].strip()
-    image_src = soup.find('div', class_='bookimage').find('img')['src']
-    book['image_url'] = urllib.parse.urljoin('http://tululu.org/', image_src)
-    book['image_filename'] = os.path.basename(book['image_url'])
+    book['image_src'] = soup.find('div', class_='bookimage').find('img')['src']
+    book['image_filename'] = os.path.basename(book['image_src'])
     book['comments'] = [
         comment.find('span').text for comment in soup.find_all('div', class_='texts')
     ]
@@ -56,10 +55,11 @@ if __name__ == '__main__':
         except requests.HTTPError:
             continue
         soup = BeautifulSoup(response.text, 'lxml')
-        book = parse_book_page(soup)
+        book = parse_book_page(soup, url)
 
-        url = "https://tululu.org/txt.php?id={}".format(book_id)
-        download_file(url, f'{book_id}.{book["title"]}.txt', 'books/')
-        download_file(book['image_url'], book["image_filename"], 'images/')
+        url_txt = "https://tululu.org/txt.php?id={}".format(book_id)
+        download_file(url_txt, f'{book_id}.{book["title"]}.txt', 'books/')
+        url_image = urllib.parse.urljoin(url, book['image_src'])
+        download_file(url_image, book["image_filename"], 'images/')
 
         print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
