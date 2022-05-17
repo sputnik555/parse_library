@@ -1,8 +1,9 @@
 import argparse
-import requests
 import os
 import urllib.parse
 from pathlib import Path
+
+import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 
