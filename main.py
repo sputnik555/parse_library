@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 import urllib.parse
 from pathlib import Path
 
@@ -23,7 +24,7 @@ def download_file(url, filename, folder='books/'):
     return path
 
 
-def parse_book_page(soup, url):
+def parse_book_page(soup):
     book = {}
     tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
     book['title'] = tululu_title[0].strip()
@@ -45,21 +46,33 @@ if __name__ == '__main__':
     )
     parser.add_argument('--start_id', default=1, help='Стартовый id книги', type=int)
     parser.add_argument('--end_id', default=10, help='Конечный id книги', type=int)
+    parser.add_argument('--max_retries', default=10,
+                        help='Максимальное кол-во попыток переподключения', type=int)
     args = parser.parse_args()
     for book_id in range(args.start_id, args.end_id + 1):
         url = "https://tululu.org/b{}/".format(book_id)
-        response = requests.get(url)
-        try:
-            response.raise_for_status()
-            check_for_redirect(response)
-        except requests.HTTPError:
-            continue
-        soup = BeautifulSoup(response.text, 'lxml')
-        book = parse_book_page(soup, url)
 
-        url_txt = "https://tululu.org/txt.php?id={}".format(book_id)
-        download_file(url_txt, f'{book_id}.{book["title"]}.txt', 'books/')
-        url_image = urllib.parse.urljoin(url, book['image_src'])
-        download_file(url_image, book["image_filename"], 'images/')
-
-        print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
+        for current_attempt in range(args.max_retries):
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+                check_for_redirect(response)
+    
+                soup = BeautifulSoup(response.text, 'lxml')
+                book = parse_book_page(soup)
+    
+                url_txt = "https://tululu.org/txt.php?id={}".format(book_id)
+                download_file(url_txt, f'{book_id}.{book["title"]}.txt', 'books/')
+                url_image = urllib.parse.urljoin(url, book['image_src'])
+                download_file(url_image, book["image_filename"], 'images/')
+            except requests.HTTPError:
+                break
+            except (requests.ConnectTimeout, requests.ConnectionError):
+                if current_attempt == args.max_retries - 1:
+                    print('Ошибка соединения с сайтом. Выполнение скрипта прервано')
+                    exit()
+                time.sleep(1 if current_attempt == 0 else 5)
+                continue
+    
+            print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
+            break
