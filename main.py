@@ -25,18 +25,19 @@ def download_file(url, filename, folder='books/'):
 
 
 def parse_book_page(soup):
-    book = {}
     tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
-    book['title'] = tululu_title[0].strip()
-    book['author'] = tululu_title[1].strip()
-    book['image_src'] = soup.find('div', class_='bookimage').find('img')['src']
-    book['image_filename'] = os.path.basename(book['image_src'])
-    book['comments'] = [
-        comment.find('span').text for comment in soup.find_all('div', class_='texts')
-    ]
-    book['genres'] = [
-        genre.text for genre in soup.find('span', class_='d_book').find_all('a')
-    ]
+    img_src = soup.find('div', class_='bookimage').find('img')['src']
+    comments = [comment.find('span').text for comment
+                in soup.find_all('div', class_='texts')]
+    genres = [genre.text for genre in soup.find('span', class_='d_book').find_all('a')]
+    book = {
+        'title': tululu_title[0].strip(),
+        'author': tululu_title[1].strip(),
+        'image_src': img_src,
+        'image_filename': os.path.basename(img_src),
+        'comments': comments,
+        'genres': genres
+    }
     return book
 
 
@@ -57,10 +58,10 @@ if __name__ == '__main__':
                 response = requests.get(url)
                 response.raise_for_status()
                 check_for_redirect(response)
-    
+
                 soup = BeautifulSoup(response.text, 'lxml')
                 book = parse_book_page(soup)
-    
+
                 url_txt = "https://tululu.org/txt.php?id={}".format(book_id)
                 download_file(url_txt, f'{book_id}.{book["title"]}.txt', 'books/')
                 url_image = urllib.parse.urljoin(url, book['image_src'])
@@ -73,6 +74,6 @@ if __name__ == '__main__':
                     exit()
                 time.sleep(1 if current_attempt == 0 else 5)
                 continue
-    
+
             print('Заголовок: {}\nАвтор: {}\n'.format(book['title'], book['author']))
             break
