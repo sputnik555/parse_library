@@ -66,7 +66,8 @@ if __name__ == '__main__':
                 download_file(url_txt, f'{book_id}.{book["title"]}.txt', 'books/')
                 url_image = urllib.parse.urljoin(url, book['image_src'])
                 download_file(url_image, book["image_filename"], 'images/')
-            except requests.HTTPError:
+            except requests.HTTPError as error:
+                print(f'Ошибка при попытке загрузки книги с id={book_id}\n')
                 break
             except (requests.ConnectTimeout, requests.ConnectionError):
                 if current_attempt == args.max_retries - 1:
