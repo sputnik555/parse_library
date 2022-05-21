@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import urllib.parse
@@ -36,9 +37,25 @@ def download_file(url, filename, folder='books/'):
     return path
 
 
+def get_last_page_number():
+    url = f'https://tululu.org/l55/'
+    response = requests.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    return int(soup.select('p.center a')[-1].text)
+
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Скрипт для парсинга категории фантастики онлайн библиотеки tululu.org'
+    )
+    parser.add_argument('--start_page', default=1, help='Стартовый номер страницы', type=int)
+    parser.add_argument('--end_page', help='Конечный номер страницы', type=int)
+    args = parser.parse_args()
+    if not args.end_page:
+        args.end_page = get_last_page_number() + 1
     books = []
-    for page in range(1, 2):
+    for page in range(args.start_page, args.end_page):
         url = f'https://tululu.org/l55/{page}/'
         response = requests.get(url)
         response.raise_for_status()
