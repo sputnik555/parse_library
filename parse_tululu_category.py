@@ -1,6 +1,5 @@
 import json
 import os
-import re
 import urllib.parse
 from pathlib import Path
 
@@ -10,13 +9,12 @@ from pathvalidate import sanitize_filename
 
 
 def parse_book_page(soup):
-    tululu_title = soup.find('td', class_='ow_px_td').find('h1').text.split('::')
-    img_src = soup.find('div', class_='bookimage').find('img')['src']
-    txt_a_tag = soup.find('table', class_='d_book').find('a', href=re.compile('txt'))
+    tululu_title = soup.select_one('.ow_px_td h1').text.split('::')
+    img_src = soup.select_one('.bookimage img')['src']
+    txt_a_tag = soup.select_one('table.d_book a[href*=txt]')
     txt_src = txt_a_tag['href'] if txt_a_tag else ''
-    comments = [comment.find('span').text for comment
-                in soup.find_all('div', class_='texts')]
-    genres = [genre.text for genre in soup.find('span', class_='d_book').find_all('a')]
+    comments = [span.text for span in soup.select('div.texts span')]
+    genres = [genre.text for genre in soup.select('span.d_book a')]
     book = {
         'title': tululu_title[0].strip(),
         'author': tululu_title[1].strip(),
@@ -45,15 +43,14 @@ if __name__ == '__main__':
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
-        book_urls = [
-            urllib.parse.urljoin(url, table.find('a')['href']) for table in soup.find_all('table', class_='d_book')
-        ]
+        book_urls = {
+            urllib.parse.urljoin(url, a['href']) for a in soup.select('table.d_book a[href*="/b"]')
+        }
         for book_url in book_urls:
             response = requests.get(book_url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'lxml')
             book = parse_book_page(soup)
-
             if book['txt_src']:
                 url_txt = urllib.parse.urljoin(book_url, book['txt_src'])
                 book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', 'books/')
