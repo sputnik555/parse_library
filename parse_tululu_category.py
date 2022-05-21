@@ -9,6 +9,29 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 
 
+def get_cli_arguments():
+    parser = argparse.ArgumentParser(
+        description='Скрипт для парсинга категории фантастики онлайн библиотеки tululu.org'
+    )
+    parser.add_argument('--start_page', default=1, help='стартовый номер страницы', type=int)
+    parser.add_argument('--end_page', help='конечный номер страницы', type=int)
+    parser.add_argument(
+        '--dest_folder',
+        help='путь к каталогу с результатами парсинга: картинкам, книгам, JSON.',
+        default='',
+        type=str
+    )
+    parser.add_argument(
+        '--json_path',
+        help='путь к *.json файлу с результатами',
+        default='books.json',
+        type=str
+    )
+    parser.add_argument('--skip_txt', help='не скачивать книги', action='store_true')
+    parser.add_argument('--skip_imgs', help='не скачивать картинки', action='store_true')
+    return parser.parse_args()
+
+
 def parse_book_page(soup):
     tululu_title = soup.select_one('.ow_px_td h1').text.split('::')
     img_src = soup.select_one('.bookimage img')['src']
@@ -46,15 +69,11 @@ def get_last_page_number():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Скрипт для парсинга категории фантастики онлайн библиотеки tululu.org'
-    )
-    parser.add_argument('--start_page', default=1, help='Стартовый номер страницы', type=int)
-    parser.add_argument('--end_page', help='Конечный номер страницы', type=int)
-    args = parser.parse_args()
+    books = []
+    args = get_cli_arguments()
     if not args.end_page:
         args.end_page = get_last_page_number() + 1
-    books = []
+    Path(args.dest_folder).mkdir(exist_ok=True)
     for page in range(args.start_page, args.end_page):
         url = f'https://tululu.org/l55/{page}/'
         response = requests.get(url)
@@ -69,11 +88,15 @@ if __name__ == '__main__':
             soup = BeautifulSoup(response.text, 'lxml')
             book = parse_book_page(soup)
             if book['txt_src']:
-                url_txt = urllib.parse.urljoin(book_url, book['txt_src'])
-                book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', 'books/')
-                url_image = urllib.parse.urljoin(url, book['image_src'])
-                book['image_src'] = download_file(url_image, os.path.basename(book['image_src']), 'images/')
+                if not args.skip_txt:
+                    url_txt = urllib.parse.urljoin(book_url, book['txt_src'])
+                    folder = os.path.join(args.dest_folder, 'books')
+                    book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', folder)
+                if not args.skip_imgs:
+                    url_image = urllib.parse.urljoin(url, book['image_src'])
+                    folder = os.path.join(args.dest_folder, 'images')
+                    book['image_src'] = download_file(url_image, os.path.basename(book['image_src']), folder)
                 books.append(book)
-
-    with open("books.json", "w") as my_file:
+    folder = os.path.join(args.dest_folder, args.json_path)
+    with open(folder, "w") as my_file:
         json.dump(books, my_file, sort_keys=True, ensure_ascii=False, indent=4)
