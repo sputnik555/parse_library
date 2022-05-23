@@ -115,11 +115,13 @@ if __name__ == '__main__':
                 response = make_request_with_reconnection(book_url)
                 soup = BeautifulSoup(response.text, 'lxml')
                 book = parse_book_page(soup)
-                if book['txt_src'] and not args.skip_txt:
+                if not book['txt_src']:
+                    continue
+                if not args.skip_txt:
                     url_txt = urllib.parse.urljoin(book_url, book['txt_src'])
                     folder = os.path.join(args.dest_folder, 'books')
                     book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', folder)
-                if book['txt_src'] and not args.skip_imgs:
+                if not args.skip_imgs:
                     url_image = urllib.parse.urljoin(url, book['image_src'])
                     folder = os.path.join(args.dest_folder, 'images')
                     book['image_src'] = download_file(url_image, os.path.basename(book['image_src']), folder)
