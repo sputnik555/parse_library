@@ -18,14 +18,12 @@ def get_cli_arguments():
     parser.add_argument(
         '--dest_folder',
         help='путь к каталогу с результатами парсинга: картинкам, книгам, JSON.',
-        default='',
-        type=str
+        default=''
     )
     parser.add_argument(
         '--json_path',
         help='путь к *.json файлу с результатами',
-        default='books.json',
-        type=str
+        default='books.json'
     )
     parser.add_argument('--skip_txt', help='не скачивать книги', action='store_true')
     parser.add_argument('--skip_imgs', help='не скачивать картинки', action='store_true')
