@@ -119,12 +119,12 @@ if __name__ == '__main__':
                     continue
                 if not args.skip_txt:
                     url_txt = urllib.parse.urljoin(book_url, book['txt_src'])
-                    folder = os.path.join(args.dest_folder, 'books')
-                    book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', folder)
+                    json_full_path = os.path.join(args.dest_folder, 'books')
+                    book['txt_src'] = download_file(url_txt, f'{book["title"]}.txt', json_full_path)
                 if not args.skip_imgs:
                     url_image = urllib.parse.urljoin(url, book['image_src'])
-                    folder = os.path.join(args.dest_folder, 'images')
-                    book['image_src'] = download_file(url_image, os.path.basename(book['image_src']), folder)
+                    json_full_path = os.path.join(args.dest_folder, 'images')
+                    book['image_src'] = download_file(url_image, os.path.basename(book['image_src']), json_full_path)
             except requests.HTTPError:
                 print(f'Ошибка при попытке загрузки книги {book_url}\n')
                 continue
@@ -132,6 +132,6 @@ if __name__ == '__main__':
                 print('Ошибка соединения с сайтом. Выполнение скрипта прервано')
                 exit()
             books.append(book)
-    folder = os.path.join(args.dest_folder, args.json_path)
-    with open(folder, "w") as my_file:
+    json_full_path = os.path.join(args.dest_folder, args.json_path)
+    with open(json_full_path, "w") as my_file:
         json.dump(books, my_file, sort_keys=True, ensure_ascii=False, indent=4)
