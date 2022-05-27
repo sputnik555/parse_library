@@ -1,6 +1,7 @@
 import json
+import os
 
-from more_itertools import grouper
+from more_itertools import grouper, chunked
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
@@ -12,10 +13,17 @@ def on_reload():
     template = env.get_template('template.html')
     with open("books.json", "r") as my_file:
         books_json = my_file.read()
-    books_grouped = list(grouper(json.loads(books_json), 2))
-    rendered_page = template.render({'books': books_grouped})
-    with open('index.html', 'w', encoding="utf8") as file:
-        file.write(rendered_page)
+    book_rows = list(grouper(json.loads(books_json), 2))
+    book_pages = list(chunked(book_rows, 10))
+    os.makedirs('pages')
+    for page_num, books in enumerate(book_pages, 1):
+        rendered_page = template.render({'books': books})
+        with open(
+                os.path.join('pages', f'index{page_num}.html'),
+                'w',
+                encoding="utf8"
+        ) as file:
+            file.write(rendered_page)
 
 
 if __name__ == '__main__':
