@@ -15,9 +15,15 @@ def on_reload():
         books_json = my_file.read()
     book_rows = list(grouper(json.loads(books_json), 2))
     book_pages = list(chunked(book_rows, 10))
-    os.makedirs('pages')
+    os.makedirs('pages', exist_ok=True)
     for page_num, books in enumerate(book_pages, 1):
-        rendered_page = template.render({'books': books})
+        rendered_page = template.render(
+            {
+                'books': books,
+                'number_of_pages': len(book_pages),
+                'current_page_number': page_num
+            }
+        )
         with open(
                 os.path.join('pages', f'index{page_num}.html'),
                 'w',
