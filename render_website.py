@@ -1,6 +1,7 @@
 import json
 import os
 
+from livereload import Server
 from more_itertools import grouper, chunked
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -38,3 +39,6 @@ def on_reload():
 
 if __name__ == '__main__':
     on_reload()
+    server = Server()
+    server.watch('template.html', on_reload)
+    server.serve(root='./')
