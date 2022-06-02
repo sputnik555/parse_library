@@ -12,8 +12,8 @@ def on_reload():
     )
     template = env.get_template('template.html')
     with open("books.json", "r") as my_file:
-        books_json = my_file.read()
-    book_rows = list(grouper(json.loads(books_json), 2))
+        books = json.load(my_file)
+    book_rows = list(grouper(books, 2))
     book_pages = list(chunked(book_rows, 10))
     os.makedirs('pages', exist_ok=True)
     for page_num, books in enumerate(book_pages, 1):
