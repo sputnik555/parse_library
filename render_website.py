@@ -5,6 +5,10 @@ from more_itertools import grouper, chunked
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
+BOOKS_IN_ROW = 2
+ROWS_IN_PAGE = 10
+
+
 def on_reload():
     env = Environment(
         loader=FileSystemLoader('.'),
@@ -13,8 +17,8 @@ def on_reload():
     template = env.get_template('template.html')
     with open("books.json", "r") as my_file:
         books = json.load(my_file)
-    book_rows = list(grouper(books, 2))
-    book_pages = list(chunked(book_rows, 10))
+    book_rows = list(grouper(books, BOOKS_IN_ROW))
+    book_pages = list(chunked(book_rows, ROWS_IN_PAGE))
     os.makedirs('pages', exist_ok=True)
     for page_num, books in enumerate(book_pages, 1):
         rendered_page = template.render(
