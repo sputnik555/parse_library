@@ -33,7 +33,7 @@ parse_tululu_category.py --start_page 700 --json_path 1.json --dest_folder resul
 
 ### Генерация веб-сайта из скачанных книг
 
-![Пример готового веб-сайта с книгами](readme_screenshot.png)
+![Пример готового веб-сайта с книгами](./static/readme_screenshot.png)
 
 Из скачанных файлов возможно сгенерировать веб-сайт. Для этого предназначен скрипт ```render_website.py```.
 Для запуска необходимо выполнить команду:
